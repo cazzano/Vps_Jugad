@@ -13,11 +13,8 @@ RUN apt-get update && apt-get install -y \
 # Install sshx
 RUN curl -sSf https://sshx.io/get | sh
 
-# Create a directory for persistent storage
+# Create a directory for potential persistent storage
 RUN mkdir -p /data
-
-# Set the volume to persist data
-VOLUME ["/data"]
 
 # Set the default command to sshx
 CMD ["sshx"]
