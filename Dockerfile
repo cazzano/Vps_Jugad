@@ -13,5 +13,5 @@ RUN apt-get update && apt-get install -y \
 # Install sshx
 RUN curl -sSf https://sshx.io/get | sh
 
-# Optional: Set the default command
-CMD ["/bin/bash"]
+# Set the default command to sshx
+CMD ["sshx"]
