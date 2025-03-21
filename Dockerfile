@@ -5,7 +5,7 @@ FROM alpine:latest
 #ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
-RUN apk update && apk upgrade --available && apk add curl
+RUN apk update && apk upgrade && apk add curl
 
 # Install sshx
 RUN curl -sSf https://sshx.io/get | sh
