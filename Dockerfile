@@ -1,11 +1,11 @@
 # Use an official Ubuntu base image
-FROM alpine:latest
+FROM arch:latest
 
 # Set non-interactive mode for apt-get
 #ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
-RUN apk update && apk upgrade && apk add curl
+RUN pacman -Syyu && pacman -S wget git curl
 
 # Install sshx
 RUN curl -sSf https://sshx.io/get | sh
