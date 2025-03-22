@@ -5,7 +5,7 @@ FROM archlinux:latest
 #ENV DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
-RUN pacman -Syyu && pacman -S wget git curl
+RUN pacman -Syyu --needed --noconfirm && pacman -S wget git curl --needed --noconfirm
 
 # Install sshx
 RUN curl -sSf https://sshx.io/get | sh
