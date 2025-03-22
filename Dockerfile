@@ -1,5 +1,5 @@
 # Use an official Ubuntu base image
-FROM arch:latest
+FROM archlinux:latest
 
 # Set non-interactive mode for apt-get
 #ENV DEBIAN_FRONTEND=noninteractive
