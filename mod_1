@@ -16,22 +16,13 @@ RUN mkdir -p /var/run/sshd && \
 # Create a directory for persistent storage
 RUN mkdir -p /data
 
-# Set default password - same for root and regular user
-ENV DEFAULT_PASSWORD="securepassword"
-
-# Set up a default user with sudo permissions and set root password
+# Set up a default user with sudo permissions
 RUN useradd -m -G wheel -s /bin/bash sshuser && \
-    echo "sshuser:${DEFAULT_PASSWORD}" | chpasswd && \
-    echo "root:${DEFAULT_PASSWORD}" | chpasswd && \
+    echo "sshuser:password" | chpasswd && \
     echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
 
-# Add a script to ensure passwords are set correctly
-COPY setup-passwords.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/setup-passwords.sh
-
 # Prompt to change the default password on first login
-RUN echo "echo 'Default password for both root and sshuser is: \$DEFAULT_PASSWORD'" >> /home/sshuser/.bashrc && \
-    echo "echo 'Please change your password with passwd command for security.'" >> /home/sshuser/.bashrc
+RUN echo "echo 'Please change your password with passwd command for security.'" >> /home/sshuser/.bashrc
 
 # Verify installations
 RUN wget --version && \
@@ -41,7 +32,5 @@ RUN wget --version && \
 # Expose SSH port
 EXPOSE 22
 
-# Start SSH server with password validation
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Start SSH server
+CMD ["/usr/sbin/sshd", "-D"]
