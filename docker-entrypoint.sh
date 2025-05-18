@@ -1,5 +1,5 @@
-#docker-entrypoint
 #!/bin/bash
+set -e
 
 # Docker entrypoint script
 # This script ensures passwords are set correctly before starting SSH

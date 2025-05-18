@@ -1,5 +1,5 @@
-#setup-passwords
 #!/bin/bash
+set -e
 
 # Setup passwords script
 # This script checks and sets passwords for root and sshuser
@@ -11,14 +11,14 @@ PASSWORD=${SSH_PASSWORD:-$DEFAULT_PASSWORD}
 set_password() {
     local user=$1
     local pass=$2
-    
+
     # Set password and check if it succeeded
     echo "${user}:${pass}" | chpasswd
     if [ $? -ne 0 ]; then
         echo "Failed to set password for ${user}!"
         return 1
     fi
-    
+
     echo "Password set successfully for ${user}"
     return 0
 }

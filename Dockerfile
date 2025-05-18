@@ -25,9 +25,16 @@ RUN useradd -m -G wheel -s /bin/bash sshuser && \
     echo "root:${DEFAULT_PASSWORD}" | chpasswd && \
     echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
 
-# Add a script to ensure passwords are set correctly
+# Copy script files with proper line endings
 COPY setup-passwords.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/setup-passwords.sh
+COPY docker-entrypoint.sh /usr/local/bin/
+
+# Make scripts executable
+RUN chmod +x /usr/local/bin/setup-passwords.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    # Fix potential line ending issues
+    sed -i 's/\r$//' /usr/local/bin/setup-passwords.sh && \
+    sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh
 
 # Prompt to change the default password on first login
 RUN echo "echo 'Default password for both root and sshuser is: \$DEFAULT_PASSWORD'" >> /home/sshuser/.bashrc && \
@@ -42,6 +49,4 @@ RUN wget --version && \
 EXPOSE 22
 
 # Start SSH server with password validation
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/docker-entrypoint.sh"]
