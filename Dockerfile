@@ -1,52 +1,39 @@
-# Use an official Arch Linux base image
-FROM archlinux:latest
+# Use Alpine Linux for a smaller footprint
+FROM alpine:latest
 
-# Install necessary dependencies and OpenSSH
-RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm openssh wget curl git sudo bash && \
-    pacman -Scc --noconfirm
+# Install OpenSSH and other necessary packages
+RUN apk update && \
+    apk add --no-cache openssh bash curl wget git sudo && \
+    rm -rf /var/cache/apk/*
 
-# Set up SSH configuration
+# Configure SSH server
 RUN mkdir -p /var/run/sshd && \
-    ssh-keygen -A && \
     echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
     echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
-    echo "PermitEmptyPasswords no" >> /etc/ssh/sshd_config
+    echo "PermitEmptyPasswords no" >> /etc/ssh/sshd_config && \
+    # Generate SSH keys ahead of time to avoid runtime generation
+    ssh-keygen -A
 
-# Create a directory for persistent storage
-RUN mkdir -p /data
+# Set root password
+ENV ROOT_PASSWORD="root_password"
+RUN echo "root:${ROOT_PASSWORD}" | chpasswd
 
-# Set default password - same for root and regular user
-ENV DEFAULT_PASSWORD="securepassword"
+# Add a non-root user with sudo privileges
+RUN adduser -D -s /bin/bash sshuser && \
+    echo "sshuser:${ROOT_PASSWORD}" | chpasswd && \
+    mkdir -p /etc/sudoers.d && \
+    echo "sshuser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/sshuser && \
+    chmod 0440 /etc/sudoers.d/sshuser
 
-# Set up a default user with sudo permissions and set root password
-RUN useradd -m -G wheel -s /bin/bash sshuser && \
-    echo "sshuser:${DEFAULT_PASSWORD}" | chpasswd && \
-    echo "root:${DEFAULT_PASSWORD}" | chpasswd && \
-    echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel
-
-# Copy script files with proper line endings
-COPY setup-passwords.sh /usr/local/bin/
-COPY docker-entrypoint.sh /usr/local/bin/
-
-# Make scripts executable
-RUN chmod +x /usr/local/bin/setup-passwords.sh && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    # Fix potential line ending issues
-    sed -i 's/\r$//' /usr/local/bin/setup-passwords.sh && \
-    sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh
-
-# Prompt to change the default password on first login
-RUN echo "echo 'Default password for both root and sshuser is: \$DEFAULT_PASSWORD'" >> /home/sshuser/.bashrc && \
-    echo "echo 'Please change your password with passwd command for security.'" >> /home/sshuser/.bashrc
-
-# Verify installations
-RUN wget --version && \
-    curl --version && \
-    git --version
+# Create entrypoint script
+RUN echo '#!/bin/sh' > /entrypoint.sh && \
+    echo 'echo "Starting SSH server with root access"' >> /entrypoint.sh && \
+    echo 'echo "Root password: ${ROOT_PASSWORD}"' >> /entrypoint.sh && \
+    echo 'exec /usr/sbin/sshd -D -e' >> /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 
 # Expose SSH port
 EXPOSE 22
 
-# Start SSH server with password validation
-ENTRYPOINT ["/bin/bash", "/usr/local/bin/docker-entrypoint.sh"]
+# Run SSH daemon
+ENTRYPOINT ["/entrypoint.sh"]
