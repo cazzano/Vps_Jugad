@@ -10,7 +10,7 @@ if ! command -v sshd &> /dev/null || ! command -v curl &> /dev/null; then
     echo "Installing required packages..."
     pkg update -y
     pkg install -y openssh curl
-    
+
     if [ $? -ne 0 ]; then
         echo "Failed to install required packages. Please check your internet connection and try again."
         exit 1
